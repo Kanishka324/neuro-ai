@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ADHD Test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h2>Reaction Game</h2>
+<p>Click ONLY when GREEN appears</p>
+
+<div id="box" style="width:150px;height:150px;background:red;margin:50px auto;"></div>
+
+<form id="dataForm" method="POST" action="/submit_all">
+    <input type="hidden" name="score" value="{{score}}">
+    <input type="hidden" name="label" value="{{label}}">
+    <input type="hidden" name="typing_speed" value="{{typing_speed}}">
+    <input type="hidden" name="errors" value="{{errors}}">
+    <input type="hidden" name="reaction_time" id="reaction_time">
+    <input type="hidden" name="accuracy" id="accuracy">
+</form>
+
+<script>
+let attempts = 0;
+let correct = 0;
+let totalReaction = 0;
+let isGreen = false;
+let startTime;
+
+function changeColor() {
+    let delay = Math.random() * 2000 + 1000;
+
+    setTimeout(() => {
+        document.getElementById("box").style.background = "green";
+        startTime = new Date().getTime();
+        isGreen = true;
+    }, delay);
+}
+
+document.getElementById("box").onclick = function() {
+    attempts++;
+
+    if (isGreen) {
+        let reaction = (new Date().getTime() - startTime) / 1000;
+        totalReaction += reaction;
+        correct++;
+        isGreen = false;
+        this.style.background = "red";
+    }
+
+    if (attempts < 10) {
+        changeColor();
+    } else {
+        finishGame();
+    }
+};
+
+function finishGame() {
+    let avgReaction = totalReaction / (correct || 1);
+    let accuracy = (correct / attempts) * 100;
+
+    document.getElementById("reaction_time").value = avgReaction;
+    document.getElementById("accuracy").value = accuracy;
+
+    document.getElementById("dataForm").submit();
+}
+
+changeColor();
+</script>
+
+</body>
+</html>

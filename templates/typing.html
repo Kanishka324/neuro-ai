@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Typing Test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h2>Typing Test (3 Rounds)</h2>
+
+<p id="text"></p>
+<textarea id="input" rows="4"></textarea>
+
+<br><br>
+<button onclick="nextRound()">Next</button>
+
+<script>
+const texts = [
+"The quick brown fox jumps over the lazy dog",
+"Artificial intelligence is transforming the world",
+"Practice makes a person perfect"
+];
+
+let round = 0;
+let speeds = [];
+let errorsList = [];
+let startTime;
+
+function loadText() {
+    document.getElementById("text").innerText = texts[round];
+    document.getElementById("input").value = "";
+    startTime = new Date().getTime();
+}
+
+function nextRound() {
+    let endTime = new Date().getTime();
+    let time = (endTime - startTime) / 1000;
+
+    let original = texts[round];
+    let typed = document.getElementById("input").value;
+
+    let errors = 0;
+    for (let i = 0; i < original.length; i++) {
+        if (typed[i] !== original[i]) errors++;
+    }
+
+    let speed = typed.length / time;
+
+    speeds.push(speed);
+    errorsList.push(errors);
+
+    round++;
+
+    if (round < 3) {
+        loadText();
+    } else {
+        let avgSpeed = speeds.reduce((a,b)=>a+b)/3;
+        let totalErrors = errorsList.reduce((a,b)=>a+b);
+
+        window.location.href =
+          `/adhd?score={{score}}&label={{label}}&typing_speed=${avgSpeed}&errors=${totalErrors}`;
+    }
+}
+
+loadText();
+</script>
+
+</body>
+</html>

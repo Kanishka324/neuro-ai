@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Questionnaire</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<form action="/submit_questionnaire" method="POST">
+  <h2>Behavior Questionnaire</h2>
+
+  <div id="qbox"></div>
+
+  <button type="submit">Next</button>
+</form>
+
+<script>
+const questions = [
+"Do you lose focus easily?",
+"Do you make reading mistakes?",
+"Do you get distracted quickly?",
+"Do you skip words while reading?",
+"Do you forget tasks easily?",
+"Do you have trouble concentrating?",
+"Do you read slowly?",
+"Do you mix letters?",
+"Do you feel restless?",
+"Do you interrupt others?"
+];
+
+let qbox = document.getElementById("qbox");
+
+questions.forEach((q, i) => {
+  qbox.innerHTML += `
+    <p>${q}</p>
+    <select name="q${i+1}">
+      <option value="0">Never</option>
+      <option value="1">Sometimes</option>
+      <option value="2">Often</option>
+    </select>
+  `;
+});
+</script>
+
+</body>
+</html>
