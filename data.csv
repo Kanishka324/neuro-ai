@@ -1,7 +1,2 @@
-score,label,typing_speed,errors,backspaces,reaction_time,accuracy,time_taken,missed_targets
-6.0,Medium,1.8665422305179653,8,0.0,1.666,100,,
-5.0,Low,1.628972989354851,0,0.0,0.7106,100,,
-3.0,Low,2.106452637512646,41,,0.6173333333333333,60,,
-0.0,Low,2.085489157519262,0,,0.4962000000000001,50,,
-8.0,Low,0.3508000564043065,20,,4.459125,80,,
-,Medium,2.316510180058128,21,6,0.6144,50,54.873000000000005,5
+typing_speed,errors,backspaces,time_taken,label,reaction_time,missed_targets,accuracy
+2.0551711828948735,49,1,61.853,Low,0.37375,2,80.0
