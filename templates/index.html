@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Questionnaire</title>
+    <title>Behavior Questionnaire</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
 <form action="/submit_questionnaire" method="POST">
   <h2>Behavior Questionnaire</h2>
-
   <div id="qbox"></div>
-
   <button type="submit">Next</button>
 </form>
 
@@ -41,6 +38,5 @@ questions.forEach((q, i) => {
   `;
 });
 </script>
-
 </body>
 </html>

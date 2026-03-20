@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
 <h2>Reaction Game</h2>
 <p>Click ONLY when GREEN appears</p>
 
@@ -16,20 +15,23 @@
     <input type="hidden" name="label" value="{{label}}">
     <input type="hidden" name="typing_speed" value="{{typing_speed}}">
     <input type="hidden" name="errors" value="{{errors}}">
+    <input type="hidden" name="backspaces" value="{{backspaces}}">
+    <input type="hidden" name="time_taken" value="{{time_taken}}">
     <input type="hidden" name="reaction_time" id="reaction_time">
     <input type="hidden" name="accuracy" id="accuracy">
+    <input type="hidden" name="missed_targets" id="missed_targets">
 </form>
 
 <script>
 let attempts = 0;
 let correct = 0;
 let totalReaction = 0;
+let missed_targets = 0;
 let isGreen = false;
 let startTime;
 
 function changeColor() {
     let delay = Math.random() * 2000 + 1000;
-
     setTimeout(() => {
         document.getElementById("box").style.background = "green";
         startTime = new Date().getTime();
@@ -39,16 +41,16 @@ function changeColor() {
 
 document.getElementById("box").onclick = function() {
     attempts++;
-
-    if (isGreen) {
-        let reaction = (new Date().getTime() - startTime) / 1000;
-        totalReaction += reaction;
+    if(isGreen) {
+        totalReaction += (new Date().getTime() - startTime)/1000;
         correct++;
         isGreen = false;
         this.style.background = "red";
+    } else {
+        missed_targets++;
     }
 
-    if (attempts < 10) {
+    if(attempts < 10) {
         changeColor();
     } else {
         finishGame();
@@ -61,12 +63,12 @@ function finishGame() {
 
     document.getElementById("reaction_time").value = avgReaction;
     document.getElementById("accuracy").value = accuracy;
+    document.getElementById("missed_targets").value = missed_targets;
 
     document.getElementById("dataForm").submit();
 }
 
 changeColor();
 </script>
-
 </body>
 </html>

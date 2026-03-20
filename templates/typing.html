@@ -5,12 +5,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
 <h2>Typing Test (3 Rounds)</h2>
-
 <p id="text"></p>
 <textarea id="input" rows="4"></textarea>
-
 <br><br>
 <button onclick="nextRound()">Next</button>
 
@@ -24,12 +21,20 @@ const texts = [
 let round = 0;
 let speeds = [];
 let errorsList = [];
+let backspacesList = [];
+let timeList = [];
+let backspaces = 0;
 let startTime;
+
+document.getElementById("input").addEventListener("keydown", function(e) {
+    if(e.key === "Backspace") backspaces++;
+});
 
 function loadText() {
     document.getElementById("text").innerText = texts[round];
     document.getElementById("input").value = "";
     startTime = new Date().getTime();
+    backspaces = 0;
 }
 
 function nextRound() {
@@ -44,26 +49,27 @@ function nextRound() {
         if (typed[i] !== original[i]) errors++;
     }
 
-    let speed = typed.length / time;
-
-    speeds.push(speed);
+    speeds.push(typed.length / time);
     errorsList.push(errors);
+    backspacesList.push(backspaces);
+    timeList.push(time);
 
     round++;
 
-    if (round < 3) {
+    if (round < texts.length) {
         loadText();
     } else {
-        let avgSpeed = speeds.reduce((a,b)=>a+b)/3;
+        let avgSpeed = speeds.reduce((a,b)=>a+b)/texts.length;
         let totalErrors = errorsList.reduce((a,b)=>a+b);
+        let totalBackspaces = backspacesList.reduce((a,b)=>a+b);
+        let totalTime = timeList.reduce((a,b)=>a+b);
 
         window.location.href =
-          `/adhd?score={{score}}&label={{label}}&typing_speed=${avgSpeed}&errors=${totalErrors}`;
+          `/adhd?score={{score}}&label={{label}}&typing_speed=${avgSpeed}&errors=${totalErrors}&backspaces=${totalBackspaces}&time_taken=${totalTime}`;
     }
 }
 
 loadText();
 </script>
-
 </body>
 </html>

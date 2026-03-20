@@ -7,9 +7,8 @@ app = Flask(__name__)
 FILE = "data.csv"
 
 COLUMNS = [
-    "score", "label",
-    "typing_speed", "errors",
-    "reaction_time", "accuracy"
+    "typing_speed","errors","backspaces","time_taken","label",
+    "reaction_time","missed_targets","accuracy"
 ]
 
 # Create CSV if not exists
@@ -17,11 +16,9 @@ if not os.path.exists(FILE) or os.stat(FILE).st_size == 0:
     df = pd.DataFrame(columns=COLUMNS)
     df.to_csv(FILE, index=False)
 
-
 @app.route('/')
 def index():
     return render_template("index.html")
-
 
 @app.route('/submit_questionnaire', methods=['POST'])
 def questionnaire():
@@ -37,13 +34,11 @@ def questionnaire():
 
     return redirect(f"/typing?score={score}&label={label}")
 
-
 @app.route('/typing')
 def typing():
     return render_template("typing.html",
                            score=request.args.get("score"),
                            label=request.args.get("label"))
-
 
 @app.route('/adhd')
 def adhd():
@@ -51,17 +46,20 @@ def adhd():
                            score=request.args.get("score"),
                            label=request.args.get("label"),
                            typing_speed=request.args.get("typing_speed"),
-                           errors=request.args.get("errors"))
-
+                           errors=request.args.get("errors"),
+                           backspaces=request.args.get("backspaces"),
+                           time_taken=request.args.get("time_taken"))
 
 @app.route('/submit_all', methods=['POST'])
 def submit_all():
     data = {
-        "score": request.form['score'],
-        "label": request.form['label'],
         "typing_speed": request.form['typing_speed'],
         "errors": request.form['errors'],
+        "backspaces": request.form['backspaces'],
+        "time_taken": request.form['time_taken'],
+        "label": request.form['label'],
         "reaction_time": request.form['reaction_time'],
+        "missed_targets": request.form['missed_targets'],
         "accuracy": request.form['accuracy']
     }
 
@@ -74,7 +72,6 @@ def submit_all():
     df.to_csv(FILE, index=False)
 
     return "✅ Data Saved Successfully!"
-
 
 if __name__ == "__main__":
     app.run(debug=True)
