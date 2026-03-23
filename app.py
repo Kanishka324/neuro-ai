@@ -1,31 +1,39 @@
 from flask import Flask, render_template, request, redirect, send_file
-import sqlite3
-import pandas as pd
+import psycopg2
 import os
+import csv
 
 app = Flask(__name__)
 
-DB_FILE = "data.db"
+# -----------------------------
+# PostgreSQL Connection
+# -----------------------------
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_conn():
+    return psycopg2.connect(DATABASE_URL)
 
 # -----------------------------
-# Initialize SQLite database
+# Initialize Database
 # -----------------------------
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS results (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        typing_speed REAL,
+        id SERIAL PRIMARY KEY,
+        typing_speed FLOAT,
         errors INTEGER,
         backspaces INTEGER,
-        time_taken REAL,
+        time_taken FLOAT,
         label TEXT,
-        reaction_time REAL,
+        reaction_time FLOAT,
         missed_targets INTEGER,
-        accuracy REAL
+        accuracy FLOAT
     )
-    ''')
+    """)
+
     conn.commit()
     conn.close()
 
@@ -43,7 +51,7 @@ def index():
 # -----------------------------
 @app.route('/submit_questionnaire', methods=['POST'])
 def questionnaire():
-    answers = [int(request.form.get(f"q{i}")) for i in range(1,11)]
+    answers = [int(request.form.get(f"q{i}")) for i in range(1, 11)]
     score = sum(answers)
 
     if score <= 10:
@@ -56,29 +64,33 @@ def questionnaire():
     return redirect(f"/typing?score={score}&label={label}")
 
 # -----------------------------
-# Typing test page
+# Typing Test Page
 # -----------------------------
 @app.route('/typing')
 def typing():
-    return render_template("typing.html",
-                           score=request.args.get("score"),
-                           label=request.args.get("label"))
+    return render_template(
+        "typing.html",
+        score=request.args.get("score"),
+        label=request.args.get("label")
+    )
 
 # -----------------------------
-# ADHD reaction page
+# ADHD Reaction Page
 # -----------------------------
 @app.route('/adhd')
 def adhd():
-    return render_template("adhd.html",
-                           score=request.args.get("score"),
-                           label=request.args.get("label"),
-                           typing_speed=request.args.get("typing_speed"),
-                           errors=request.args.get("errors"),
-                           backspaces=request.args.get("backspaces"),
-                           time_taken=request.args.get("time_taken"))
+    return render_template(
+        "adhd.html",
+        score=request.args.get("score"),
+        label=request.args.get("label"),
+        typing_speed=request.args.get("typing_speed"),
+        errors=request.args.get("errors"),
+        backspaces=request.args.get("backspaces"),
+        time_taken=request.args.get("time_taken")
+    )
 
 # -----------------------------
-# Save all data: SQLite + CSV
+# Save Data (PostgreSQL ONLY)
 # -----------------------------
 @app.route('/submit_all', methods=['POST'])
 def submit_all():
@@ -93,42 +105,53 @@ def submit_all():
         "accuracy": float(request.form['accuracy'])
     }
 
-    # --- SQLite ---
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute("""
         INSERT INTO results 
         (typing_speed, errors, backspaces, time_taken, label, reaction_time, missed_targets, accuracy)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', tuple(data.values()))
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (
+        data["typing_speed"],
+        data["errors"],
+        data["backspaces"],
+        data["time_taken"],
+        data["label"],
+        data["reaction_time"],
+        data["missed_targets"],
+        data["accuracy"]
+    ))
+
     conn.commit()
     conn.close()
-
-    # --- CSV backup ---
-    csv_file = "data.csv"
-    if os.path.exists(csv_file):
-        df = pd.read_csv(csv_file)
-        df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
-    else:
-        df = pd.DataFrame([data])
-
-    df.to_csv(csv_file, index=False)
 
     return "✅ Data Saved Successfully!"
 
 # -----------------------------
-# Export CSV route
+# Export CSV from Database
 # -----------------------------
 @app.route('/export_csv')
 def export_csv():
-    csv_file = "data.csv"
-    if os.path.exists(csv_file):
-        return send_file(csv_file, as_attachment=True)
-    else:
-        return "No CSV found yet!"
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM results")
+    rows = cursor.fetchall()
+
+    file_path = "data.csv"
+
+    with open(file_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([desc[0] for desc in cursor.description])
+        writer.writerows(rows)
+
+    conn.close()
+
+    return send_file(file_path, as_attachment=True)
 
 # -----------------------------
-# Run the app
+# Run App
 # -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
