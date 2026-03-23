@@ -6,15 +6,16 @@ import csv
 app = Flask(__name__)
 
 # -----------------------------
-# PostgreSQL Connection
+# Database Connection
 # -----------------------------
-DATABASE_URL = os.getenv("DATABASE_URL")
-
 def get_conn():
-    return psycopg2.connect(DATABASE_URL)
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        raise Exception("DATABASE_URL is missing")
+    return psycopg2.connect(db_url, connect_timeout=5)
 
 # -----------------------------
-# Initialize Database
+# Initialize Database (ONLY WHEN NEEDED)
 # -----------------------------
 def init_db():
     conn = get_conn()
@@ -37,17 +38,15 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
-
 # -----------------------------
-# Homepage: Questionnaire
+# Homepage
 # -----------------------------
 @app.route('/')
 def index():
     return render_template("index.html")
 
 # -----------------------------
-# Process Questionnaire
+# Questionnaire
 # -----------------------------
 @app.route('/submit_questionnaire', methods=['POST'])
 def questionnaire():
@@ -64,7 +63,7 @@ def questionnaire():
     return redirect(f"/typing?score={score}&label={label}")
 
 # -----------------------------
-# Typing Test Page
+# Typing Page
 # -----------------------------
 @app.route('/typing')
 def typing():
@@ -75,7 +74,7 @@ def typing():
     )
 
 # -----------------------------
-# ADHD Reaction Page
+# ADHD Page
 # -----------------------------
 @app.route('/adhd')
 def adhd():
@@ -90,10 +89,14 @@ def adhd():
     )
 
 # -----------------------------
-# Save Data (PostgreSQL ONLY)
+# Save Data (PostgreSQL)
 # -----------------------------
 @app.route('/submit_all', methods=['POST'])
 def submit_all():
+
+    # 🔥 Ensure table exists (safe + runs only when needed)
+    init_db()
+
     data = {
         "typing_speed": float(request.form['typing_speed']),
         "errors": int(request.form['errors']),
@@ -129,7 +132,7 @@ def submit_all():
     return "✅ Data Saved Successfully!"
 
 # -----------------------------
-# Export CSV from Database
+# Export CSV
 # -----------------------------
 @app.route('/export_csv')
 def export_csv():
